@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Movie Recommender</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="wrap">
+        <header class="topbar">
+            <div class="brand">
+                <svg viewBox="0 0 24 24" class="brand-icon" aria-hidden="true">
+                    <path d="M3 3h18v18H3z" fill="none"></path>
+                    <path d="M4 4h7v7H4zM13 4h7v5h-7zM13 10h7v10h-7zM4 12h7v6H4z" />
+                </svg>
+                <h1>Movie Recommender</h1>
+            </div>
+            <p class="sub">TMDB posters • Fast suggestions • Dark neon UI</p>
+        </header>
+
+        <main>
+            <form id="search-form" method="POST" onsubmit="onSubmit(event)" class="search-form">
+                <div class="input-area">
+                    <input id="movie-input" name="movie" type="text" placeholder="Type a movie name (e.g. Inception)" autocomplete="off" required>
+                    <div id="suggestions" class="suggestions hidden" role="listbox" aria-label="Suggestions"></div>
+                </div>
+                <button type="submit" class="btn">Recommend</button>
+            </form>
+
+            <div id="spinner" class="spinner hidden" aria-hidden="true"></div>
+
+            <section id="results" class="grid">
+                {% if recommended_movies %}
+                    {% for movie in recommended_movies %}
+                        <article class="card">
+                            <div class="poster">
+                                {% if movie.poster %}
+                                    <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+                                {% else %}
+                                    <div class="noimg">No Image</div>
+                                {% endif %}
+                            </div>
+                            <div class="card-meta">
+                                <h3 class="card-title">{{ movie.title }}</h3>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="placeholder">
+                        <p>Type a movie name and press <strong>Recommend</strong> — suggestions will appear as you type.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+
+        <footer class="footer">
+            <small>Built with ❤️ • Tarnvir Singh</small>
+        </footer>
+    </div>
+
+<script>
+const input = document.getElementById('movie-input');
+const suggestionsBox = document.getElementById('suggestions');
+const spinner = document.getElementById('spinner');
+let suggAbortController = null;
+
+function showSpinner() {
+    spinner.classList.remove('hidden');
+}
+function hideSpinner() {
+    spinner.classList.add('hidden');
+}
+
+input.addEventListener('input', () => {
+    const q = input.value.trim();
+    if (q.length < 2) {
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.classList.add('hidden');
+        return;
+    }
+
+    if (suggAbortController) suggAbortController.abort();
+    suggAbortController = new AbortController();
+    const signal = suggAbortController.signal;
+
+    // show small spinner while fetching suggestions
+    showSpinner();
+
+    fetch(`/suggest?q=${encodeURIComponent(q)}`, { signal })
+        .then(res => res.json())
+        .then(list => {
+            suggestionsBox.innerHTML = '';
+            if (list && list.length > 0) {
+                list.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'suggest-item';
+                    div.textContent = item;
+                    div.tabIndex = 0;
+                    div.addEventListener('click', () => {
+                        input.value = item;
+                        suggestionsBox.innerHTML = '';
+                        suggestionsBox.classList.add('hidden');
+                    });
+                    div.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            input.value = item;
+                            suggestionsBox.innerHTML = '';
+                            suggestionsBox.classList.add('hidden');
+                        }
+                    });
+                    suggestionsBox.appendChild(div);
+                });
+                suggestionsBox.classList.remove('hidden');
+            } else {
+                suggestionsBox.classList.add('hidden');
+            }
+        })
+        .catch(err => {
+            // ignore abort or network errors
+            suggestionsBox.classList.add('hidden');
+        })
+        .finally(() => {
+            hideSpinner();
+        });
+});
+
+function onSubmit(e) {
+    // show spinner while the POST happens (page reloads)
+    showSpinner();
+    // allow normal submit to proceed
+}
+
+document.addEventListener('click', (e) => {
+    const wrap = document.querySelector('.input-area');
+    if (!wrap.contains(e.target)) {
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.classList.add('hidden');
+    }
+});
+</script>
+</body>
+</html>
