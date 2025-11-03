@@ -1,5 +1,8 @@
-flask
+Flask
 pandas
 numpy
+scikit-learn
+nltk
 requests
+python-dotenv
 gunicorn
