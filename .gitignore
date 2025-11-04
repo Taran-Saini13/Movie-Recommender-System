@@ -179,3 +179,13 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Ignore large data files
+processed_movies.csv
+similarity.npy
+tmdb_5000_movies.csv
+tmdb_5000_credits.csv
+
+# Ignore environment variables
+.env
+
