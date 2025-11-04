@@ -181,7 +181,6 @@ cython_debug/
 .cursorindexingignore
 
 # Ignore large data files
-similarity.npy
 tmdb_5000_movies.csv
 tmdb_5000_credits.csv
 
