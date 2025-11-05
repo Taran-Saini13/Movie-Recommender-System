@@ -79,6 +79,10 @@ python app.py
 http://127.0.0.1:5000/
 
 
+## 🚀 Live Demo
+
+🔗 **Live Website:** https://movie-recommender-0tja.onrender.com
+
 ## 🌐 Deployment
 
 You can deploy this Flask app on:
